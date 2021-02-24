@@ -1,0 +1,96 @@
+---
+title: "BIOL3272 Assignment 1"
+author: "Rachel Edidin"
+output: html_document
+---
+# Titanic Survivorship
+## Introduction
+
+The dataset I will be analyzing is a record of every passenger on the Titanic. With this dataset, I will be looking at survivorship based on factors such as ticket price, age, class, and sex. Based on historical understanding of this tragedy, I would hypothesize that survival is positively correlated with being young, female, and in first class (which is associated with a higher ticket price). This is because when the Titanic was sinking, lifeboat preference was given to first class passengers and especially women and children.   
+
+This dataset contains a lot of information about every passenger that was on board the Titanic when it sank. Variables include class (numerical, discrete), whether or not the passenger survived (binary), age (numerical, discrete), sex (categorical), ticket price (numerical, continuous), lifeboat number (numeric, discrete), and destination. From these data, I will be analyzing different factors such as class and age that I believe would be associated with survival probability. 
+
+This dataset is observational. However, it basically represents a population and not a sample. The population is the passengers of the Titanic, and every single one of them is listed in this dataset (however, the dataset does not include crew). Because this is a population and not a sample, sampling bias and error is not a huge issue. However, the results of this analysis can't really be applied to other populations--for example, it would not really make sense to use this data to analyze survivorship of a potential shipwreck that happens today, because in the time since the Titanic sank measures have been taken to make large shipwrecks more survivable, and the demographics of Titanic passengers are unlikely to be replicated ever again exactly as they were. Despite limitations this analysis is still meaningful from a historical perspective as it aids in understanding what happened when the Titanic sank.
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Load data, echo=FALSE, message=FALSE}
+library(tidyverse)
+titanic <- read_csv("data/titanic3.csv")
+```
+## Figures
+```{r Age Distribution, fig.cap="Age Distribution of Titanic Survivors", echo=FALSE, message=FALSE, warning=FALSE}
+titanic<-titanic %>% 
+  mutate(survivor=case_when(survived==1 ~"Survived", survived==0 ~"Died")) %>% 
+  mutate(class=case_when(pclass==1 ~"First", pclass==2 ~"Second", pclass==3 ~"Third"))
+ggplot(titanic, aes(x=age, fill=survivor))+
+  geom_histogram(alpha=.7)+
+  ggtitle("Age of Titanic Passengers")
+```
+This figure shows the age distributions of those who died and those who survived the sinking of the Titanic. 
+```{r class survival, fig.cap="Class and Sex of Survivors", echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = titanic, aes(x = survivor,  fill= class))+
+  geom_bar(position = position_dodge(preserve = "single"))+
+  facet_wrap(~sex)+
+  ggtitle("Class and Sex of Titanic Passengers")+
+  xlab("Survivor Status")
+```
+These plots show the class and sex breakdown of those who did and did not survive on the Titanic.
+
+
+## Analysis
+```{r summary stats, message=FALSE, warning=FALSE, echo=FALSE}
+mean_age <- titanic %>% 
+  group_by(survivor) %>% 
+  summarize(mean=mean(age, na.rm=TRUE), var=sd(age, na.rm=TRUE), .groups='drop')
+all_age <- titanic %>% 
+  summarise(mean=mean(age, na.rm=TRUE), var=sd(age, na.rm=TRUE), .groups='drop')
+median_price <- titanic %>% 
+  group_by(survivor) %>% 
+  summarise(median=median(fare, na.rm=TRUE), var=sd(fare, na.rm=TRUE), .groups='drop')
+all_price <- titanic %>% 
+  summarise(median=median(fare, na.rm=TRUE), var=sd(fare, na.rm=TRUE), .groups='drop')
+
+```
+From the histogram of age distribution, it seems that the age of survivors skews slightly lower than the age of those who died. The average age of all passengers was 29.9 with a standard deviation of 14.4 The average age of survivors was 28.9 (sd=15.1), and the average age of those who died was 30.5 (sd=13.9). From these data it seems that there is a difference in the average ages of those who died and survived, but the difference is not very large. Hypothesis testing could be used to determine if it is statistically significant.
+
+From the plots showing survivorship by class and sex, it looks like first class women survived the most, and third class men survived the least. Another interesting variable to consider is ticket price. First class tickets were more expensive than third, and so it would make sense that those who survived paid more for their tickets. For this analysis, I will be using the median instead of the mean. This is because several first class passengers were involved with the design of the ship and thus sailed for free, which pulls the mean down quite a bit (especially when some first class tickets were $200+). The median ticket price of all passengers was $14.5. The median price of those who died was $10.5, and of survivors it was $26. Once again, hypothesis testing would need to be done to determine if there was a significant difference between these values, but since the ticket price of survivors was more than double that of those who died, it seems that the difference would be significant if a test was run. 
+
+Based on prior knowledge and research of the sinking of the Titanic, I would assume that the group with the highest amount of survival would be women and children in first class. I did some data exploration using a dataset of all passengers aboard the Titanic and found that the data suggested this as well. Additionally, being young and having a more expensive ticket seemed to be associated with survival (but hypothesis testing could confirm this). There is potential for non-independence with these data, as children were more likely to survive with their mothers, and women with children were also probably more likely to survive as their position in a lifeboat would be prioritized.
+
+This dataset represented an entire population: the passengers on board the Titanic when it sank. Because this was a population, and because this event happened more than 100 years ago, it might be challenging to use these findings to make predictions about current events. Additionally, making sampling distributions and calculating their uncertainty is not very meaningful because the population information is known.However, in terms of understanding history, this dataset is good because it is free of sampling error and bias (as it represents a population) and it allows for historians to understand the events of the Titanic. This disaster also provided important lessons for the luxury ship industry, such as enough lifeboats for all passengers--which greatly reduces death in the event of a sinking,
+
+## Code
+```{r all code, message = FALSE, eval = FALSE}
+#setup
+library(tidyverse)
+titanic <- read_csv("data/titanic3.csv")
+#first plot
+titanic<-titanic %>% 
+  mutate(survivor=case_when(survived==1 ~"Survived", survived==0 ~"Died")) %>% 
+  mutate(class=case_when(pclass==1 ~"First", pclass==2 ~"Second", pclass==3 ~"Third"))
+ggplot(titanic, aes(x=age, fill=survivor))+
+  geom_histogram(alpha=.7)+ 
+ggtitle("Age of Titanic Passengers")
+#second plot
+ggplot(data = titanic, aes(x = survivor,  fill= class))+
+  geom_bar(position = position_dodge(preserve = "single"))+
+  facet_wrap(~sex)+
+ggtitle("Class and Sex of Titanic Passengers")+
+  xlab("Survivor Status")
+#summary stats
+mean_age <- titanic %>% 
+  group_by(survivor) %>% 
+  summarize(mean=mean(age, na.rm=TRUE), var=sd(age, na.rm=TRUE), .groups='drop')
+all_age <- titanic %>% 
+  summarise(mean=mean(age, na.rm=TRUE), var=sd(age, na.rm=TRUE), .groups='drop')
+median_price <- titanic %>% 
+  group_by(survivor) %>% 
+  summarise(median=median(fare, na.rm=TRUE), var=sd(fare, na.rm=TRUE), .groups='drop')
+all_price <- titanic %>% 
+  summarise(median=median(fare, na.rm=TRUE), var=sd(fare, na.rm=TRUE), .groups='drop')
+```
